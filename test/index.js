@@ -15,18 +15,17 @@ describe('ditto upgrader', () => {
       let upgradedMapping = dittoUpgrader.dittoUpgrader(oldMapping);
       let expectedResult = serviceObj.expectedResult;
 
-      it(`${testService}: all fields should be identical to the expected result`, () => {
+      it(`${testService}: all fields should be identical to the expected result`, (done) => {
         new ditto_v2(upgradedMapping).unify(sample).then((result) => {
           for (let key in expectedResult) {
             if (key === "id" || key === "createdAt") {
               continue;
             }
             assert.deepStrictEqual(result[key], expectedResult[key])  
-          }    
-        });
+          }
+          done();    
+        }).catch(done);
       });
     });
-    // // Dummy to make mocha it() work inside of each()
-    // it('', function () {});
   });
 });

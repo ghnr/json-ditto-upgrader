@@ -33,34 +33,47 @@ function replaceValueReference(values) {
       }
     }
   });
+}
 
+const directlyAssignArrays = (obj) => {
+  // Upgrade: Arrays no longer need to be mapped with an innerDocument and an output,
+  // they can be assigned directly now
+  if ('output' in obj && 'innerDocument' in obj) {
+    if (_.isArray(obj.output) && obj.innerDocument === '!') {
+      obj = obj.value;
+    }
+  } 
+  return obj;
 }
 
 const upgradeKeyValueProperties = (obj) => {
+  // Upgrade 'values' and 'keys' objects to v2 spec 
 
-  changeKeysProperty(obj.keys);
+  if ('values' in obj && 'keys' in obj) {
+    changeKeysProperty(obj.keys);
 
-  if (_.isArray(obj.values)) {
-    obj.values.forEach(element => {
-      removeInnerReference(element);
-      replaceValueReference(element);
-    });
-  }
-  else {
-    removeInnerReference(obj.values);
-    replaceValueReference(obj.values);
+    if (_.isArray(obj.values)) {
+      obj.values.forEach(element => {
+        removeInnerReference(element);
+        replaceValueReference(element);
+      });
+    }
+    else {
+      removeInnerReference(obj.values);
+      replaceValueReference(obj.values);
+    }
   }
 }
 
 // Upgrading mapping file
 const upgradeMappingFile = (oldMapping) => {
-for (let property in oldMapping) {
-  if (_.isObject(oldMapping[property])) {
-    if ('values' in oldMapping[property] && 'keys' in oldMapping[property]) {
-        upgradeKeyValueProperties(oldMapping[property]);
-      }
+  for (let property in oldMapping) {
+    if (_.isObject(oldMapping[property])) {
+      upgradeKeyValueProperties(oldMapping[property]);      
+      oldMapping[property] = directlyAssignArrays(oldMapping[property]);
     }
   }
+  // Modified in-place
   return oldMapping;
 }
 
